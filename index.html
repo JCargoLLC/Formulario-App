@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulario actualizado desde Excel</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-TZSnk4xp8V3J6z5uBi1do5YnAKZjQP93nKz6x1YDaR9Qx1Vdgyic4U6xr2QVUHJr" crossorigin="anonymous"></script>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 2rem;
+        background: radial-gradient(circle at top, #f4f5ff 0%, #e4edff 40%, #ffffff 100%);
+        min-height: 100vh;
+      }
+
+      h1 {
+        text-align: center;
+        color: #1f3c88;
+      }
+
+      .card {
+        max-width: 640px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 16px;
+        box-shadow: 0 18px 48px rgba(34, 71, 140, 0.2);
+        padding: 2.5rem;
+        backdrop-filter: blur(8px);
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        color: #203864;
+        margin-bottom: 0.4rem;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #d2dcff;
+        margin-bottom: 1.2rem;
+        font-size: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #4f6bed;
+        box-shadow: 0 0 0 4px rgba(79, 107, 237, 0.18);
+      }
+
+      .status {
+        margin-top: 1.5rem;
+        font-weight: 500;
+        text-align: center;
+        color: #1f3c88;
+      }
+
+      .error {
+        color: #d04a4a;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 1rem;
+        }
+
+        .card {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Formulario desde Excel</h1>
+      <label for="registro">Selecciona un registro</label>
+      <select id="registro" disabled>
+        <option>Cargando datos…</option>
+      </select>
+      <form id="formulario"></form>
+      <p id="estado" class="status">El formulario se actualiza con el archivo <code>LLC.xlsx</code>.</p>
+    </div>
+
+    <script>
+      const registroSelect = document.getElementById("registro");
+      const formulario = document.getElementById("formulario");
+      const estado = document.getElementById("estado");
+      let filasExcel = [];
+
+      function crearCampo(labelText, colIndex) {
+        const wrapper = document.createElement("div");
+        const label = document.createElement("label");
+        label.textContent = labelText;
+        label.htmlFor = `campo-${colIndex}`;
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.id = `campo-${colIndex}`;
+        input.name = labelText;
+        input.dataset.colIndex = colIndex;
+        input.placeholder = "Sin datos";
+        input.readOnly = true;
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        formulario.appendChild(wrapper);
+      }
+
+      function mostrarRegistro(row) {
+        formulario.querySelectorAll("input").forEach((input) => {
+          const index = Number.parseInt(input.dataset.colIndex, 10);
+          input.value = row[index] ?? "";
+        });
+      }
+
+      function inicializarFormulario(data) {
+        const [encabezados, ...filas] = data;
+
+        if (!encabezados || encabezados.length === 0) {
+          throw new Error("El archivo de Excel no tiene encabezados válidos");
+        }
+
+        formulario.textContent = "";
+        encabezados.forEach((titulo, index) => {
+          if (!titulo) {
+            return;
+          }
+          crearCampo(titulo, index);
+        });
+
+        registroSelect.textContent = "";
+        filas.forEach((fila, idx) => {
+          const etiqueta = fila[0] || `Registro ${idx + 1}`;
+          const option = document.createElement("option");
+          option.value = idx;
+          option.textContent = etiqueta;
+          registroSelect.appendChild(option);
+        });
+
+        if (filas.length === 0) {
+          const option = document.createElement("option");
+          option.textContent = "Sin registros en el Excel";
+          option.disabled = true;
+          registroSelect.appendChild(option);
+          registroSelect.disabled = true;
+          filasExcel = [];
+          estado.textContent = "El archivo de Excel no contiene datos para mostrar.";
+          return;
+        }
+
+        registroSelect.disabled = false;
+        filasExcel = filas;
+        mostrarRegistro(filasExcel[0]);
+        estado.textContent = "Selecciona un registro para ver su información actualizada.";
+      }
+
+      async function cargarExcel() {
+        try {
+          const respuesta = await fetch("LLC.xlsx");
+          if (!respuesta.ok) {
+            throw new Error(`No se pudo descargar el archivo: ${respuesta.status}`);
+          }
+
+          const arrayBuffer = await respuesta.arrayBuffer();
+          const workbook = XLSX.read(arrayBuffer, { type: "array" });
+          const sheetName = workbook.SheetNames[0];
+          const hoja = workbook.Sheets[sheetName];
+          const datos = XLSX.utils.sheet_to_json(hoja, { header: 1 });
+
+          if (datos.length === 0) {
+            throw new Error("El archivo de Excel está vacío");
+          }
+
+          inicializarFormulario(datos);
+        } catch (error) {
+          console.error(error);
+          registroSelect.innerHTML = "";
+          const option = document.createElement("option");
+          option.textContent = "Error al cargar el Excel";
+          option.disabled = true;
+          registroSelect.appendChild(option);
+          registroSelect.disabled = true;
+          filasExcel = [];
+          estado.textContent = error.message;
+          estado.classList.add("error");
+        }
+      }
+
+      registroSelect.addEventListener("change", (event) => {
+        const indice = Number.parseInt(event.target.value, 10);
+        const filaSeleccionada = filasExcel[indice];
+        if (filaSeleccionada) {
+          mostrarRegistro(filaSeleccionada);
+        }
+      });
+
+      cargarExcel();
+    </script>
+  </body>
+</html>
