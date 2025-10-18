@@ -82,7 +82,10 @@ Papa.parse(CSV_URL, {
 
 function renderTable(rows) {
   const tabla = document.getElementById("tabla");
-  if (!rows.length) return tabla.innerHTML = "<tr><td>No hay datos para mostrar</td></tr>";
+  if (!rows.length) {
+    tabla.innerHTML = "<tr><td>No hay datos para mostrar</td></tr>";
+    return;
+  }
   const headers = Object.keys(rows[0]);
   tabla.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
   rows.forEach(r => {
@@ -93,16 +96,20 @@ function renderTable(rows) {
 function filtrarDatos() {
   const mes = document.getElementById("mes").value.trim().toLowerCase();
   const semana = document.getElementById("semana").value.trim().toLowerCase();
-  const driver = document.getElementById("driver").value.trim().toLowerCase();
+  const chofer = document.getElementById("driver").value.trim(); // input se llama 'driver' en HTML
 
   const filtrado = datos.filter(r => {
-    const mesVal = (r["Mes"] ?? "").toLowerCase();
-    const semanaVal = (r["Semana"] ?? "").toLowerCase();
-    const driverVal = (r["Driver"] ?? "").toLowerCase();
-    return (!mes || mesVal === mes) &&
-           (!semana || semanaVal === semana) &&
-           (!driver || driverVal === driver);
+    const mesVal = (r["mes"] ?? "").toString().trim().toLowerCase();
+    const semanaVal = (r["semana"] ?? "").toString().trim().toLowerCase();
+    const choferVal = (r["chofer"] ?? "").toString().trim();
+
+    const condMes = !mes || mesVal === mes;
+    const condSemana = !semana || semanaVal === semana;
+    const condChofer = !chofer || parseInt(choferVal) === parseInt(chofer);
+
+    return condMes && condSemana && condChofer;
   });
+
   renderTable(filtrado);
 }
 
@@ -113,6 +120,7 @@ function limpiar() {
   renderTable(datos);
 }
 </script>
+
 
 </body>
 </html>
