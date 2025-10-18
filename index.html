@@ -1,161 +1,117 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Formulario actualizado desde Excel</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-TZSnk4xp8V3J6z5uBi1do5YnAKZjQP93nKz6x1YDaR9Qx1Vdgyic4U6xr2QVUHJr" crossorigin="anonymous"></script>
-    <style>
-      :root {
-        color-scheme: light dark;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      }
+<head>
+<meta charset="UTF-8">
+<title>Panel del Owner - Hor G Cargo Express</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #4CAF50, #B266FF);
+  color: #222;
+  text-align: center;
+  padding: 20px;
+}
+h2 {
+  color: white;
+  text-shadow: 1px 1px 3px #333;
+}
+input, button, select {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+}
+button {
+  background: #4CAF50;
+  color: white;
+  cursor: pointer;
+}
+button:hover {
+  background: #45a049;
+}
+table {
+  width: 90%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+th {
+  background: #B266FF;
+  color: white;
+  padding: 10px;
+}
+td {
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+</style>
+</head>
+<body>
 
-      body {
-        margin: 0;
-        padding: 2rem;
-        background: radial-gradient(circle at top, #f4f5ff 0%, #e4edff 40%, #ffffff 100%);
-        min-height: 100vh;
-      }
+<h2>Resumen del Owner (desde Google Sheets)</h2>
+<div>
+  <label>Mes:</label>
+  <input type="text" id="mes" placeholder="Ej: Octubre">
+  <label>Semana:</label>
+  <input type="text" id="semana" placeholder="Ej: 1">
+  <label>Driver:</label>
+  <input type="text" id="driver" placeholder="Ej: Driver 1">
+  <button onclick="filtrarDatos()">Filtrar</button>
+  <button onclick="limpiar()">Limpiar</button>
+</div>
 
-      h1 {
-        text-align: center;
-        color: #1f3c88;
-      }
+<table id="tabla"></table>
 
-      .card {
-        max-width: 640px;
-        margin: 0 auto;
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 16px;
-        box-shadow: 0 18px 48px rgba(34, 71, 140, 0.2);
-        padding: 2.5rem;
-        backdrop-filter: blur(8px);
-      }
-
-      label {
-        display: block;
-        font-weight: 600;
-        color: #203864;
-        margin-bottom: 0.4rem;
-      }
-
-      input,
-      select {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        border: 1px solid #d2dcff;
-        margin-bottom: 1.2rem;
-        font-size: 1rem;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      input:focus,
-      select:focus {
-        outline: none;
-        border-color: #4f6bed;
-        box-shadow: 0 0 0 4px rgba(79, 107, 237, 0.18);
-      }
-
-      .status {
-        margin-top: 1.5rem;
-        font-weight: 500;
-        text-align: center;
-        color: #1f3c88;
-      }
-
-      .error {
-        color: #d04a4a;
-      }
-
-      @media (max-width: 600px) {
-        body {
-          padding: 1rem;
-        }
-
-        .card {
-          padding: 1.5rem;
-        }
-      }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  </head>
-  <body>
-    <div class="card">
-      <h1>Formulario desde Excel</h1>
-      <label for="registro">Selecciona un registro</label>
-      <select id="registro" disabled>
-        <option>Cargando datos…</option>
-      </select>
-      <form id="formulario"></form>
-      <p id="estado" class="status">El formulario se actualiza con el archivo <code>LLC.xlsx</code>.</p>
-    </div>
-<h2 style="color:#4CAF50;text-align:center;">Resumen del Owner</h2>
-<input type="file" id="input-excel" accept=".xlsx,.xls" />
-<div id="filters" style="margin:20px;text-align:center;"></div>
-<table id="table-output" border="1" style="width:90%;margin:auto;border-collapse:collapse;font-family:sans-serif;"></table>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-document.getElementById('input-excel').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  const reader = new FileReader();
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJNoOMFPAB8M-UhmKHG1rWxJvHaumF1k012pKyTkUSq2XC5blEQXkNxvAcyfKvayVPjoLjhUGMRA8p/pub?gid=2092876240&single=true&output=csv";
+let datos = [];
 
-  reader.onload = function(e) {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const resumenSheet = workbook.Sheets["Resumen_App"]; // 👈 nombre exacto de tu hoja
-    
-    if (!resumenSheet) {
-      alert("No se encontró una hoja llamada 'Resumen_App'. Verifica el nombre exacto en tu Excel.");
-      return;
-    }
-
-    // Convierte la hoja a JSON
-    const json = XLSX.utils.sheet_to_json(resumenSheet, { header: 1 });
-    const headers = json[0];
-    const rows = json.slice(1);
-
-    // Crea los filtros
-    const filtersDiv = document.getElementById("filters");
-    filtersDiv.innerHTML = "";
-    headers.forEach((header, index) => {
-      if (index < 3) { // Los 3 primeros campos como filtros (ej: Mes, Semana, Conductor)
-        const select = document.createElement("select");
-        select.innerHTML = `<option value="">Filtrar por ${header}</option>`;
-        const uniqueValues = [...new Set(rows.map(r => r[index]))].filter(v => v);
-        uniqueValues.forEach(val => {
-          const opt = document.createElement("option");
-          opt.value = val;
-          opt.textContent = val;
-          select.appendChild(opt);
-        });
-        select.addEventListener("change", () => renderTable());
-        filtersDiv.appendChild(select);
-      }
-    });
-
-    // Renderiza la tabla
-    const table = document.getElementById("table-output");
-    const renderTable = () => {
-      const selects = filtersDiv.querySelectorAll("select");
-      const filters = Array.from(selects).map(s => s.value);
-      const filteredRows = rows.filter(r => {
-        return filters.every((f, i) => !f || r[i] === f);
-      });
-
-      table.innerHTML = "<tr style='background:#4CAF50;color:white;'>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-      filteredRows.forEach(r => {
-        table.innerHTML += "<tr>" + r.map(c => `<td style='padding:5px;text-align:center;background:#f3e5f5;'>${c ?? ""}</td>`).join("") + "</tr>";
-      });
-    };
-
-    renderTable();
-  };
-
-  reader.readAsArrayBuffer(file);
+Papa.parse(CSV_URL, {
+  download: true,
+  header: true,
+  complete: function(results) {
+    datos = results.data;
+    renderTable(datos);
+  }
 });
+
+function renderTable(rows) {
+  const tabla = document.getElementById("tabla");
+  if (!rows.length) return tabla.innerHTML = "<tr><td>No hay datos para mostrar</td></tr>";
+  const headers = Object.keys(rows[0]);
+  tabla.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+  rows.forEach(r => {
+    tabla.innerHTML += "<tr>" + headers.map(h => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
+  });
+}
+
+function filtrarDatos() {
+  const mes = document.getElementById("mes").value.trim().toLowerCase();
+  const semana = document.getElementById("semana").value.trim().toLowerCase();
+  const driver = document.getElementById("driver").value.trim().toLowerCase();
+
+  const filtrado = datos.filter(r => {
+    const mesVal = (r["Mes"] ?? "").toLowerCase();
+    const semanaVal = (r["Semana"] ?? "").toLowerCase();
+    const driverVal = (r["Driver"] ?? "").toLowerCase();
+    return (!mes || mesVal === mes) &&
+           (!semana || semanaVal === semana) &&
+           (!driver || driverVal === driver);
+  });
+  renderTable(filtrado);
+}
+
+function limpiar() {
+  document.getElementById("mes").value = "";
+  document.getElementById("semana").value = "";
+  document.getElementById("driver").value = "";
+  renderTable(datos);
+}
 </script>
 
-  </body>
+</body>
 </html>
