@@ -70,9 +70,8 @@ td {
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJNoOMFPAB8M-UhmKHG1rWxJvHaumF1k012pKyTkUSq2XC5blEQXkNxvAcyfKvayVPjoLjhUGMRA8p/pub?gid=1933431995&single=true&output=csv";
 let datos = [];
-let columnasResumen = ["fecha", "origen", "destino", "carga", "ingreso", "gasto", "neto"]; // 👈 pon aquí las columnas que tiene tu hoja RESUMEN_APP
 
-// 1️⃣ Cargar datos de la hoja "Viajes"
+// Cargar hoja VIAJES
 Papa.parse(CSV_URL, {
   download: true,
   header: true,
@@ -80,52 +79,49 @@ Papa.parse(CSV_URL, {
     datos = results.data.map(row => {
       const limpio = {};
       for (const key in row) {
-        const k = key.trim().toLowerCase();
-        limpio[k] = (row[key] || "").toString().trim().toLowerCase();
+        limpio[key.trim().toLowerCase()] = (row[key] || "").toString().trim().toLowerCase();
       }
       return limpio;
     });
-    // No mostramos nada al inicio
-    document.getElementById("tabla").innerHTML = "<tr><td colspan='7'>Ingrese filtros y pulse BUSCAR</td></tr>";
+    document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>Ingrese filtros y pulse BUSCAR</td></tr>";
   }
 });
 
-// 2️⃣ Mostrar solo columnas que están en la hoja Resumen_App
-function renderTable(rows) {
-  const tabla = document.getElementById("tabla");
-  if (!rows.length) {
-    tabla.innerHTML = "<tr><td colspan='7'>No hay resultados para los filtros seleccionados</td></tr>";
-    return;
-  }
-
-  tabla.innerHTML = "<tr>" + columnasResumen.map(h => `<th>${h.toUpperCase()}</th>`).join("") + "</tr>";
-  rows.forEach(r => {
-    tabla.innerHTML += "<tr>" + columnasResumen.map(h => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
-  });
-}
-
-// 3️⃣ Filtro de búsqueda (mes, semana, chofer)
 function filtrarDatos() {
   const mes = document.getElementById("mes").value.trim().toLowerCase();
   const semana = document.getElementById("semana").value.trim().toLowerCase();
   const chofer = document.getElementById("driver").value.trim().toLowerCase();
 
-  const filtrado = datos.filter(r => {
-    const m = (r["mes"] || "").trim().toLowerCase();
-    const s = (r["semana"] || "").trim().toLowerCase();
-    const c = (r["chofer"] || "").trim().toLowerCase();
-    return (!mes || m === mes) && (!semana || s === semana) && (!chofer || c === chofer);
+  // Implementación tipo SUMAPRODUCTO
+  let totalIngresos = 0;
+  datos.forEach(r => {
+    const condMes = (!mes) || (r["mes"] === mes);
+    const condSemana = (!semana) || (r["semana"] === semana);
+    const condChofer = (!chofer) || (r["conductor_id"] === chofer);
+
+    if (condMes && condSemana && condChofer) {
+      const val = parseFloat((r["ingreso_bruto"] || "0").replace(",", ".").replace(/[^0-9.-]/g, ""));
+      if (!isNaN(val)) totalIngresos += val;
+    }
   });
 
-  renderTable(filtrado);
+  // Mostrar el resultado
+  const tabla = document.getElementById("tabla");
+  tabla.innerHTML = `
+    <tr>
+      <th>Filtro</th><th>Resultado</th>
+    </tr>
+    <tr>
+      <td>Total Ingresos</td><td>$${totalIngresos.toFixed(2)}</td>
+    </tr>
+  `;
 }
 
-// 4️⃣ Limpiar búsqueda
 function limpiar() {
   document.getElementById("mes").value = "";
   document.getElementById("semana").value = "";
   document.getElementById("driver").value = "";
-  document.getElementById("tabla").innerHTML = "<tr><td colspan='7'>Ingrese filtros y pulse BUSCAR</td></tr>";
+  document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>Ingrese filtros y pulse BUSCAR</td></tr>";
 }
 </script>
 
