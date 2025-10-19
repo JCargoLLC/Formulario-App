@@ -79,7 +79,7 @@ Papa.parse(CSV_URL, {
     datos = results.data.map(row => {
       const limpio = {};
       for (const key in row) {
-        limpio[key.trim().toLowerCase()] = (row[key] || "").toString().trim().toLowerCase();
+        limpio[key.trim()] = (row[key] || "").toString().trim();
       }
       return limpio;
     });
@@ -92,28 +92,34 @@ function filtrarDatos() {
   const semana = document.getElementById("semana").value.trim().toLowerCase();
   const chofer = document.getElementById("driver").value.trim().toLowerCase();
 
-  // Implementación tipo SUMAPRODUCTO
-  let totalIngresos = 0;
-  datos.forEach(r => {
-    const condMes = (!mes) || (r["mes"] === mes);
-    const condSemana = (!semana) || (r["semana"] === semana);
-    const condChofer = (!chofer) || (r["conductor_id"] === chofer);
-
-    if (condMes && condSemana && condChofer) {
-      const val = parseFloat((r["ingreso_bruto"] || "0").replace(",", ".").replace(/[^0-9.-]/g, ""));
-      if (!isNaN(val)) totalIngresos += val;
-    }
+  // Filtrar por Mes, Semana y Conductor_ID
+  const filtrado = datos.filter(r => {
+    const m = (r["Mes"] || "").trim().toLowerCase();
+    const s = (r["Semana"] || "").trim().toLowerCase();
+    const c = (r["Conductor_ID"] || "").trim().toLowerCase();
+    return (!mes || m === mes) && (!semana || s === semana) && (!chofer || c === chofer);
   });
 
-  // Mostrar el resultado
+  if (!filtrado.length) {
+    document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>No se encontraron resultados</td></tr>";
+    return;
+  }
+
+  // Conversión segura a número
+  const toNumber = val => parseFloat(val.replace(",", ".").replace(/[^0-9.-]/g, "")) || 0;
+
+  // 👉 Total de Ingresos (columna Ingreso_Bruto)
+  const totalIngresos = filtrado.reduce((acc, r) => acc + toNumber(r["Ingreso_Bruto"]), 0);
+
+  // 👉 Total de Descuentos (columna Descuento)
+  const totalDescuentos = filtrado.reduce((acc, r) => acc + toNumber(r["Descuento"]), 0);
+
+  // Mostrar resultados uno debajo del otro
   const tabla = document.getElementById("tabla");
   tabla.innerHTML = `
-    <tr>
-      <th>Filtro</th><th>Resultado</th>
-    </tr>
-    <tr>
-      <td>Total Ingresos</td><td>$${totalIngresos.toFixed(2)}</td>
-    </tr>
+    <tr><th>Concepto</th><th>Total</th></tr>
+    <tr><td>Total Ingresos</td><td>$${totalIngresos.toFixed(2)}</td></tr>
+    <tr><td>Total Descuentos</td><td>$${totalDescuentos.toFixed(2)}</td></tr>
   `;
 }
 
@@ -124,6 +130,7 @@ function limpiar() {
   document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>Ingrese filtros y pulse BUSCAR</td></tr>";
 }
 </script>
+
 
 
 
