@@ -11,3 +11,25 @@
   "id": "10228",
   "description": "Resumen y control de pagos de Jorge Cargo Express LLC"
 }
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Jorge Cargo Express LLC",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "JCargoLLC",
+  "start_url": "/",
+  "theme_color": "#b96ad9",
+  "id": "10228",
+  "description": "Resumen y control de pagos de Jorge Cargo Express LLC",
+
+  "icons": [
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
