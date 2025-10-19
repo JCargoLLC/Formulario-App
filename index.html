@@ -158,6 +158,14 @@ function limpiar() {
   document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>Ingrese filtros y pulse BUSCAR</td></tr>";
 }
 </script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("serviceworker.js")
+      .then(() => console.log("Service Worker registrado correctamente."))
+      .catch(err => console.log("Error al registrar Service Worker:", err));
+  }
+</script>
 
 
 </body>
