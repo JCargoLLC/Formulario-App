@@ -68,21 +68,21 @@ td {
 <table id="tabla"></table>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJNoOMFPAB8M-UhmKHG1rWxJvHaumF1k012pKyTkUSq2XC5blEQXkNxvAcyfKvayVPjoLjhUGMRA8p/pub?gid=2092876240&single=true&output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJNoOMFPAB8M-UhmKHG1rWxJvHaumF1k012pKyTkUSq2XC5blEQXkNxvAcyfKvayVPjoLjhUGMRA8p/pub?gid=1933431995&single=true&output=csv";
 let datos = [];
 
+// Cargar datos desde la hoja "Viajes"
 Papa.parse(CSV_URL, {
   download: true,
   header: true,
   complete: function(results) {
-    // Normalizamos los encabezados para que no fallen por mayúsculas o espacios
     datos = results.data.map(row => {
-      const nuevo = {};
+      const limpio = {};
       for (const key in row) {
-        const limpio = key.toString().trim().toLowerCase();
-        nuevo[limpio] = (row[key] || "").toString().trim();
+        const k = key.trim().toLowerCase();
+        limpio[k] = (row[key] || "").toString().trim().toLowerCase();
       }
-      return nuevo;
+      return limpio;
     });
     renderTable(datos);
   }
@@ -91,30 +91,30 @@ Papa.parse(CSV_URL, {
 function renderTable(rows) {
   const tabla = document.getElementById("tabla");
   if (!rows.length) {
-    tabla.innerHTML = "<tr><td>No hay datos para mostrar</td></tr>";
+    tabla.innerHTML = "<tr><td colspan='5'>No hay datos para mostrar</td></tr>";
     return;
   }
 
   const headers = Object.keys(rows[0]);
   tabla.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
   rows.forEach(r => {
-    tabla.innerHTML += "<tr>" + headers.map(h => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
+    tabla.innerHTML += "<tr>" + headers.map(h => `<td>${r[h]}</td>`).join("") + "</tr>";
   });
 }
 
 function filtrarDatos() {
   const mes = document.getElementById("mes").value.trim().toLowerCase();
   const semana = document.getElementById("semana").value.trim().toLowerCase();
-  const chofer = document.getElementById("driver").value.trim();
+  const chofer = document.getElementById("driver").value.trim().toLowerCase();
 
   const filtrado = datos.filter(r => {
-    const mesVal = (r["mes"] ?? "").toLowerCase();
-    const semanaVal = (r["semana"] ?? "").toLowerCase();
-    const choferVal = (r["chofer"] ?? "");
+    const m = (r["mes"] || "").trim().toLowerCase();
+    const s = (r["semana"] || "").trim().toLowerCase();
+    const c = (r["chofer"] || "").trim().toLowerCase();
 
-    const condMes = !mes || mesVal === mes;
-    const condSemana = !semana || semanaVal === semana;
-    const condChofer = !chofer || parseInt(choferVal) === parseInt(chofer);
+    const condMes = !mes || m === mes;
+    const condSemana = !semana || s === semana;
+    const condChofer = !chofer || c === chofer;
 
     return condMes && condSemana && condChofer;
   });
