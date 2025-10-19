@@ -114,11 +114,12 @@ function filtrarDatos() {
   const totalGastos = filtrado.reduce((acc, r) => acc + toNumber(r["Total_Gastos"]), 0);
   const balance = totalIngresos - (totalDescuentos + totalGastos);
 
-  // 👉 Pago Driver Total (columna Pago_Driver)
+  // 👉 Totales de pago
   const pagoDriver = filtrado.reduce((acc, r) => acc + toNumber(r["Pago_Driver"]), 0);
-
-  // 👉 Nuevo: Pago Owner Total (columna Pago_Owner)
   const pagoOwner = filtrado.reduce((acc, r) => acc + toNumber(r["Pago_Owner"]), 0);
+
+  // 👉 Total de Pago (suma de ambos)
+  const totalPago = pagoDriver + pagoOwner;
 
   // Mostrar resultados uno debajo del otro
   const tabla = document.getElementById("tabla");
@@ -132,6 +133,9 @@ function filtrarDatos() {
     </tr>
     <tr><td>Pago Driver Total</td><td>$${pagoDriver.toFixed(2)}</td></tr>
     <tr><td>Pago Owner Total</td><td>$${pagoOwner.toFixed(2)}</td></tr>
+    <tr style="font-weight:bold; color:#b96ad9; border-top:2px solid #b96ad9;">
+      <td>Total de Pago</td><td>$${totalPago.toFixed(2)}</td>
+    </tr>
   `;
 }
 
