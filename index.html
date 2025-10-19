@@ -71,7 +71,7 @@ td {
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJNoOMFPAB8M-UhmKHG1rWxJvHaumF1k012pKyTkUSq2XC5blEQXkNxvAcyfKvayVPjoLjhUGMRA8p/pub?gid=1933431995&single=true&output=csv";
 let datos = [];
 
-// Cargar la hoja VIAJES
+// Cargar hoja VIAJES
 Papa.parse(CSV_URL, {
   download: true,
   header: true,
@@ -79,7 +79,7 @@ Papa.parse(CSV_URL, {
     datos = results.data.map(row => {
       const limpio = {};
       for (const key in row) {
-        limpio[key.trim()] = (row[key] || "").toString().trim();
+        limpio[key.trim().toLowerCase()] = (row[key] || "").toString().trim().toLowerCase();
       }
       return limpio;
     });
@@ -92,39 +92,27 @@ function filtrarDatos() {
   const semana = document.getElementById("semana").value.trim().toLowerCase();
   const chofer = document.getElementById("driver").value.trim().toLowerCase();
 
-  // Filtrar viajes por Mes, Semana y Conductor_ID
-  const filtrado = datos.filter(r => {
-    const m = (r["Mes"] || "").trim().toLowerCase();
-    const s = (r["Semana"] || "").trim().toLowerCase();
-    const c = (r["Conductor_ID"] || "").trim().toLowerCase();
-    return (!mes || m === mes) && (!semana || s === semana) && (!chofer || c === chofer);
+  // Implementación tipo SUMAPRODUCTO
+  let totalIngresos = 0;
+  datos.forEach(r => {
+    const condMes = (!mes) || (r["mes"] === mes);
+    const condSemana = (!semana) || (r["semana"] === semana);
+    const condChofer = (!chofer) || (r["conductor_id"] === chofer);
+
+    if (condMes && condSemana && condChofer) {
+      const val = parseFloat((r["ingreso_bruto"] || "0").replace(",", ".").replace(/[^0-9.-]/g, ""));
+      if (!isNaN(val)) totalIngresos += val;
+    }
   });
 
-  if (!filtrado.length) {
-    document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>No se encontraron resultados</td></tr>";
-    return;
-  }
-
-  // Función para convertir texto a número
-  const toNumber = val => parseFloat(val.replace(",", ".").replace(/[^0-9.-]/g, "")) || 0;
-
-  // Calcular totales según tus columnas reales
-  const totalDescuentos = filtrado.reduce((acc, r) => acc + toNumber(r["Total descuentos"]), 0);
-  const totalGastos = filtrado.reduce((acc, r) => acc + toNumber(r["Total Gastos"]), 0);
-  const pagoDriver = filtrado.reduce((acc, r) => acc + toNumber(r["Pago Driver Total"]), 0);
-  const pagoOwner = filtrado.reduce((acc, r) => acc + toNumber(r["Pago Owner Total"]), 0);
-  const balanceFinal = (pagoOwner + pagoDriver) - (totalDescuentos + totalGastos);
-
-  // Mostrar resultados uno debajo del otro
+  // Mostrar el resultado
   const tabla = document.getElementById("tabla");
   tabla.innerHTML = `
-    <tr><th>Concepto</th><th>Total</th></tr>
-    <tr><td>Total Descuentos</td><td>$${totalDescuentos.toFixed(2)}</td></tr>
-    <tr><td>Total Gastos</td><td>$${totalGastos.toFixed(2)}</td></tr>
-    <tr><td>Pago Driver Total</td><td>$${pagoDriver.toFixed(2)}</td></tr>
-    <tr><td>Pago Owner Total</td><td>$${pagoOwner.toFixed(2)}</td></tr>
-    <tr style="font-weight:bold; color:${balanceFinal >= 0 ? 'green' : 'red'};">
-      <td>Balance Final</td><td>$${balanceFinal.toFixed(2)}</td>
+    <tr>
+      <th>Filtro</th><th>Resultado</th>
+    </tr>
+    <tr>
+      <td>Total Ingresos</td><td>$${totalIngresos.toFixed(2)}</td>
     </tr>
   `;
 }
