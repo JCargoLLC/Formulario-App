@@ -70,8 +70,9 @@ td {
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJNoOMFPAB8M-UhmKHG1rWxJvHaumF1k012pKyTkUSq2XC5blEQXkNxvAcyfKvayVPjoLjhUGMRA8p/pub?gid=1933431995&single=true&output=csv";
 let datos = [];
+let columnasResumen = ["fecha", "origen", "destino", "carga", "ingreso", "gasto", "neto"]; // 👈 pon aquí las columnas que tiene tu hoja RESUMEN_APP
 
-// Cargar datos desde la hoja "Viajes"
+// 1️⃣ Cargar datos de la hoja "Viajes"
 Papa.parse(CSV_URL, {
   download: true,
   header: true,
@@ -84,24 +85,26 @@ Papa.parse(CSV_URL, {
       }
       return limpio;
     });
-    renderTable(datos);
+    // No mostramos nada al inicio
+    document.getElementById("tabla").innerHTML = "<tr><td colspan='7'>Ingrese filtros y pulse BUSCAR</td></tr>";
   }
 });
 
+// 2️⃣ Mostrar solo columnas que están en la hoja Resumen_App
 function renderTable(rows) {
   const tabla = document.getElementById("tabla");
   if (!rows.length) {
-    tabla.innerHTML = "<tr><td colspan='5'>No hay datos para mostrar</td></tr>";
+    tabla.innerHTML = "<tr><td colspan='7'>No hay resultados para los filtros seleccionados</td></tr>";
     return;
   }
 
-  const headers = Object.keys(rows[0]);
-  tabla.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+  tabla.innerHTML = "<tr>" + columnasResumen.map(h => `<th>${h.toUpperCase()}</th>`).join("") + "</tr>";
   rows.forEach(r => {
-    tabla.innerHTML += "<tr>" + headers.map(h => `<td>${r[h]}</td>`).join("") + "</tr>";
+    tabla.innerHTML += "<tr>" + columnasResumen.map(h => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>";
   });
 }
 
+// 3️⃣ Filtro de búsqueda (mes, semana, chofer)
 function filtrarDatos() {
   const mes = document.getElementById("mes").value.trim().toLowerCase();
   const semana = document.getElementById("semana").value.trim().toLowerCase();
@@ -111,24 +114,21 @@ function filtrarDatos() {
     const m = (r["mes"] || "").trim().toLowerCase();
     const s = (r["semana"] || "").trim().toLowerCase();
     const c = (r["chofer"] || "").trim().toLowerCase();
-
-    const condMes = !mes || m === mes;
-    const condSemana = !semana || s === semana;
-    const condChofer = !chofer || c === chofer;
-
-    return condMes && condSemana && condChofer;
+    return (!mes || m === mes) && (!semana || s === semana) && (!chofer || c === chofer);
   });
 
   renderTable(filtrado);
 }
 
+// 4️⃣ Limpiar búsqueda
 function limpiar() {
   document.getElementById("mes").value = "";
   document.getElementById("semana").value = "";
   document.getElementById("driver").value = "";
-  renderTable(datos);
+  document.getElementById("tabla").innerHTML = "<tr><td colspan='7'>Ingrese filtros y pulse BUSCAR</td></tr>";
 }
 </script>
+
 
 
 
