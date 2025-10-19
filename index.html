@@ -66,7 +66,6 @@ td {
 </div>
 
 <table id="tabla"></table>
-
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJNoOMFPAB8M-UhmKHG1rWxJvHaumF1k012pKyTkUSq2XC5blEQXkNxvAcyfKvayVPjoLjhUGMRA8p/pub?gid=2092876240&single=true&output=csv";
@@ -76,7 +75,15 @@ Papa.parse(CSV_URL, {
   download: true,
   header: true,
   complete: function(results) {
-    datos = results.data;
+    // Normalizamos los encabezados para que no fallen por mayúsculas o espacios
+    datos = results.data.map(row => {
+      const nuevo = {};
+      for (const key in row) {
+        const limpio = key.toString().trim().toLowerCase();
+        nuevo[limpio] = (row[key] || "").toString().trim();
+      }
+      return nuevo;
+    });
     renderTable(datos);
   }
 });
@@ -87,6 +94,7 @@ function renderTable(rows) {
     tabla.innerHTML = "<tr><td>No hay datos para mostrar</td></tr>";
     return;
   }
+
   const headers = Object.keys(rows[0]);
   tabla.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
   rows.forEach(r => {
@@ -100,9 +108,9 @@ function filtrarDatos() {
   const chofer = document.getElementById("driver").value.trim();
 
   const filtrado = datos.filter(r => {
-    const mesVal = (r["mes"] ?? "").toString().trim().toLowerCase();
-    const semanaVal = (r["semana"] ?? "").toString().trim().toLowerCase();
-    const choferVal = (r["chofer"] ?? "").toString().trim();
+    const mesVal = (r["mes"] ?? "").toLowerCase();
+    const semanaVal = (r["semana"] ?? "").toLowerCase();
+    const choferVal = (r["chofer"] ?? "");
 
     const condMes = !mes || mesVal === mes;
     const condSemana = !semana || semanaVal === semana;
