@@ -108,14 +108,13 @@ function filtrarDatos() {
   // Conversión segura a número
   const toNumber = val => parseFloat(val.replace(",", ".").replace(/[^0-9.-]/g, "")) || 0;
 
-  // 👉 Total de Ingresos (columna Ingreso_Bruto)
+  // 👉 Totales principales
   const totalIngresos = filtrado.reduce((acc, r) => acc + toNumber(r["Ingreso_Bruto"]), 0);
-
-  // 👉 Total de Descuentos (columna Descuento)
   const totalDescuentos = filtrado.reduce((acc, r) => acc + toNumber(r["Descuento"]), 0);
-
-  // 👉 Total de Gastos (columna Total_Gastos)
   const totalGastos = filtrado.reduce((acc, r) => acc + toNumber(r["Total_Gastos"]), 0);
+
+  // 👉 Balance final
+  const balance = totalIngresos - (totalDescuentos + totalGastos);
 
   // Mostrar resultados uno debajo del otro
   const tabla = document.getElementById("tabla");
@@ -124,6 +123,9 @@ function filtrarDatos() {
     <tr><td>Total Ingresos</td><td>$${totalIngresos.toFixed(2)}</td></tr>
     <tr><td>Total Descuentos</td><td>$${totalDescuentos.toFixed(2)}</td></tr>
     <tr><td>Total Gastos</td><td>$${totalGastos.toFixed(2)}</td></tr>
+    <tr style="font-weight:bold; color:${balance >= 0 ? 'green' : 'red'};">
+      <td>Balance Final</td><td>$${balance.toFixed(2)}</td>
+    </tr>
   `;
 }
 
