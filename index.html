@@ -117,11 +117,9 @@ function filtrarDatos() {
   // 👉 Totales de pago
   const pagoDriver = filtrado.reduce((acc, r) => acc + toNumber(r["Pago_Driver"]), 0);
   const pagoOwner = filtrado.reduce((acc, r) => acc + toNumber(r["Pago_Owner"]), 0);
-
-  // 👉 Total de Pago (suma de ambos)
   const totalPago = pagoDriver + pagoOwner;
 
-  // Mostrar resultados uno debajo del otro
+  // Mostrar resultados con separación profesional
   const tabla = document.getElementById("tabla");
   tabla.innerHTML = `
     <tr><th>Concepto</th><th>Total</th></tr>
@@ -130,6 +128,9 @@ function filtrarDatos() {
     <tr><td>Total Gastos</td><td>$${totalGastos.toFixed(2)}</td></tr>
     <tr style="font-weight:bold; color:${balance >= 0 ? 'green' : 'red'};">
       <td>Balance Final</td><td>$${balance.toFixed(2)}</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="border-top: 3px solid #b96ad9; height:6px;"></td>
     </tr>
     <tr><td>Pago Driver Total</td><td>$${pagoDriver.toFixed(2)}</td></tr>
     <tr><td>Pago Owner Total</td><td>$${pagoOwner.toFixed(2)}</td></tr>
@@ -146,8 +147,6 @@ function limpiar() {
   document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>Ingrese filtros y pulse BUSCAR</td></tr>";
 }
 </script>
-
-
 
 
 </body>
