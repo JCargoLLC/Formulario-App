@@ -95,49 +95,7 @@ function filtrarDatos() {
   // Filtrar por Mes, Semana y Conductor_ID
   const filtrado = datos.filter(r => {
     const m = (r["Mes"] || "").trim().toLowerCase();
-    const s = (r["Semana"] || "").trim().toLowerCase();
-    const c = (r["Conductor_ID"] || "").trim().toLowerCase();
-    return (!mes || m === mes) && (!semana || s === semana) && (!chofer || c === chofer);
-  });
-
-  if (!filtrado.length) {
-    document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>No se encontraron resultados</td></tr>";
-    return;
-  }
-
-  // Conversión segura a número
-  const toNumber = val => parseFloat(val.replace(",", ".").replace(/[^0-9.-]/g, "")) || 0;
-
-  // 👉 Totales principales
-  const totalIngresos = filtrado.reduce((acc, r) => acc + toNumber(r["Ingreso_Bruto"]), 0);
-  const totalDescuentos = filtrado.reduce((acc, r) => acc + toNumber(r["Descuento"]), 0);
-  const totalGastos = filtrado.reduce((acc, r) => acc + toNumber(r["Total_Gastos"]), 0);
-  const balance = totalIngresos - (totalDescuentos + totalGastos);
-
-  // 👉 Nuevo: Pago Driver Total (columna Pago_Driver)
-  const pagoDriver = filtrado.reduce((acc, r) => acc + toNumber(r["Pago_Driver"]), 0);
-
-  // Mostrar resultados uno debajo del otro
-  const tabla = document.getElementById("tabla");
-  tabla.innerHTML = `
-    <tr><th>Concepto</th><th>Total</th></tr>
-    <tr><td>Total Ingresos</td><td>$${totalIngresos.toFixed(2)}</td></tr>
-    <tr><td>Total Descuentos</td><td>$${totalDescuentos.toFixed(2)}</td></tr>
-    <tr><td>Total Gastos</td><td>$${totalGastos.toFixed(2)}</td></tr>
-    <tr style="font-weight:bold; color:${balance >= 0 ? 'green' : 'red'};">
-      <td>Balance Final</td><td>$${balance.toFixed(2)}</td>
-    </tr>
-    <tr><td>Pago Driver Total</td><td>$${pagoDriver.toFixed(2)}</td></tr>
-  `;
-}
-
-function limpiar() {
-  document.getElementById("mes").value = "";
-  document.getElementById("semana").value = "";
-  document.getElementById("driver").value = "";
-  document.getElementById("tabla").innerHTML = "<tr><td colspan='2'>Ingrese filtros y pulse BUSCAR</td></tr>";
-}
-</script>
+    const s = (r["Sem]()
 
 
 
